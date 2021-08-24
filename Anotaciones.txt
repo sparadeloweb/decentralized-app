@@ -1,0 +1,298 @@
+# Descargar Metamask
+La billetera que nos permitirá trabajar sobre la blockchain.. Para descargar -> https://metamask.io/
+
+# Diferencia entre DApp y App
+La diferencia se da en la red donde se ejecuta, la aplicación descentralizada funciona sobre la red de blockchain, en este caso usaremos Ethereum. 
+A diferencia de BTC, ETH permite crear aplicaciones en su red. En ETH la moneda que nos permite enviar a la red se llama Ether, esta es otra diferencia ya que las DApps requieren de una fracción de estos para operar.
+Ether = Dinero Fiat.
+
+MAS INFO: https://ethereum.org/en/dapps/
+
+# Crear DApp
+Para crear nuestra aplicación descentralizada debemos utilizar Truffle: conjunto de herramientas para crear DApps.
+Nos permitirá trabajar con Smart Contracts, o en palabras para desarrolladores, el backend.
+https://www.trufflesuite.com/
+Para utilizar una blockchain de prueba y no estar realizando gastos en Ether todo el tiempo utilizamos Ganache de Truffle
+
+# Instalar Trufle
+Para instalar Truffle en nuestro equipo, utilizamos el comando:
+npm i truffle -g
+
+# Instalar Ganache
+https://www.trufflesuite.com/ganache
+Es una aplicación de escritorio multiplataforma. Se instala con su correspondiente instalador.
+
+# Instalar Extensión Solidity en VS Code
+VS Code no reconoce la sintaxis de Solidity, para poder ayudarlo debemos instalar una extensión.
+solidity por Juan Blanco
+
+# Crear proyecto con Truffle
+Una vez instalado truffle ejecuto en consola:
+truffle init %NOMBREPROYECTO%
+
+Al ejecutar este comando generará en la carpeta un nuevo proyecto, y nos dará dos comandos para probar en consola propios de Truffle:
+truffle create contract %NOMBRECONTRATO%
+truffle create test %NOMBREDELTEST%
+
+# Estructura del proyecto
+/truffle-config.js -> Es el archivo encargado de conectar nuestra DApp a la red blockchain
+/contracts/ -> Esta carpeta trae un archivo llamado Migrations.sol, que sería el código fuente de nuestra aplicación. Esta carpeta contiene contratos y estos tienen funciones que operan en el servidor blockchain.
+/migrations/ -> Esta carpeta contiene un archivo 1_initial_migration.js, el cual se encarga de hacer deploy de nuestros contratos
+/test/ -> Carpeta que contiene archivos para realizar testing, tanto en Solidity como en JS.
+
+# Generar Blockchain en Ganache
+Ir a la aplicación y dar "Quickstart". Nos dará una red con 10 cuentas creadas y los datos de esta misma.
+
+# Nuestro primer Contrato Inteligente ( Smart Contract )
+Nos dirigimos a /contracts/ y creamos un archivo
+MyFirstContract.sol // .sol de Solidity
+
+Como se compone ?
+
+---Primeras 2 líneas--
+Línea 1 le declaro la licencia a utilizar, se puede copiar la que utiliza Migrations.sol
+
+Línea 2 le indico que lenguaje voy a utilizar: pragma %LENGUAJE% ^0.0.0 (siendo 0.0.0 la versión actual)
+pragma solidity ^0.8.6
+---Primeras 2 líneas--
+
+
+--Definir contrato--
+Defino contrato -> contract MyirstContract { // Métodos/funciones } - Por convección se debe respetar el mismo nombre que el archivo al definir el contrato.
+--Definir contrato--
+
+--Objetos o datos que manejará el contrato--
+Dentro de este contrato voy a definir el "modelo" de este mismo, o que recibirá. Para hacerlo, debo utilizar mapping (conjunto de datos que contienen un par clave valor, solo que la clave puede ser cualquier valor)
+mapping no puede retornar todos los objetos que tiene
+
+Antes definir el mapping, puedo definir un nuevo tipo de dato que me ayudará. Utilizando struct %TIPODEDATO% {}
+struct Task {
+    uint256 id;
+    string title;
+    bool is_active;
+}
+No puedo definir formato tipo "Date", en su defecto defino un uint256
+
+Volviendo a mapping, debo indicarle que tipo de clave tendrá y que valor:
+mapping(uint256 => Task)
+También debo agregarle su alcance, que por defecto es public
+mapping(uint256 => Task) public
+Y finalmente el nombre de este mapping
+mapping(uint256 => Task) public tasks; // nombre en minúsculas
+--Objetos o datos que manejará el contrato--
+
+--Funciones del contrato--
+Las funciones se definen de la siguiente forma:
+function %NOMBREFUNCION%() {}
+
+Todas las funciones deben tener indicado su tipo (Solidity es tipado)
+function createTask(string title, string description) {
+}
+
+A su vez, debemos indicarle que estos parámetros se almacenarán en memoria por un breve periodo de tiempo.
+function createTask(string memory title, string memory description) {
+}
+
+Finalmente le agregamos la visibilidad
+function createTask(string memory title, string memory description) public{
+}
+
+Opcionalmente, para los párametros nos permite agregar _ antes de cualquier parámetro, para indicarle que son variables privadas.
+function createTask(string memory _title, string memory _description) public{
+
+}
+
+
+Ejemplo crear tareas:
+Puedo crear, antes del struct, una variable de tipo uint llamada taskCounter que sea igual a 0, luego, en la función de crear al finalizar aumentarle un punto.
+uint taskCounter = 0;
+struct Task{....
+
+function createTask(string memory _title, string memory _description) public{
+    tasks[taskCounter] = Task(taskCounter, _title, _description, false, block.timestamp);
+    // Igualo tasks ( que es el mapping, en su respectiva llave (id) ) al tipo de dato que recibe como parámetro los elementos asignados en el struct, en su respectivo orden.
+    // Utilizo block.timestamp para obtener el tiempo en que se guarda la tarea.
+    taskCounter++;
+}
+
+--Funciones del contrato--
+
+
+# Crear migración para nuestro contrato
+Para esto vamos a /migrations/ y creamos un archivo:
+%ULTIMODIGITO%_%NOMBREDECONTRATO%.js
+
+El %ULTIMODIGITO% sirve para darle un orden lógico y de ejecución.
+
+Para el código dentro de la migración puedo copiar el de las migraciones.
+En su primer línea defino:
+const %NOMBRECONTRATO% = artifacts.require("%NOMBRECONTRATO%");
+
+module.exports = function (deployer) {
+    deployer.deploy(%NOMBRECONTRATOVARIABLE%)
+};
+
+# Configurar truffle-config.js para trabajar sobre la red local
+Debo ir a este archivo y descomentar la llave development, en el objeto network. Luego de esto ajusto con los valores que me da Ganash.
+Luego, debo descomentar la llave solc en compilers, y le indico que versión voy a utilizar (misma que definí en el contrato).
+
+# Subir nuestro contrato
+En consola (de VS CODE si o si), parado en la carpeta del proyecto, ejecuto: truffle deploy
+Este comando compila y sube el código, si solo lo quiero compilar puedo utilizar truffle copile
+
+Al hacer esto se nos generará la carpeta build con los JSON que actúan en la red
+Al utilizar Ganache siempre ejecutará las acciones sobre la primer cuenta registrada en la blockchain, por ello esa será la que perderá el gas de la transacción
+
+# Como interactuar con un contrato ?
+La primer forma de interactuar con uno es con la consola.
+1er comando: truffle console // Se conectará a la red y ejecutará una consola (en el mismo VS Code)
+Comandos:
+%NOMBRECONTRATOVARIABLE% = await %NOMBRECONTRATO%.deployed()
+console.log(%NOMBRECONTRATOVARIABLE%); // Llama a todos los contratos realizados
+
+%VARIABLE% = await %NOMBRECONTRATOVARIABLE%.tasks(%INDEX%); // Busco una tarea por ID
+
+%HASHDEUNELEMENTOVAR% = %VARIABLE%.address // Puedo obtener la dirección en la que se encuentra mi contrato una vez lo tenga en una variable (ej anterior)
+
+%EJEMPLOVAREXTERNA% = await %VARIABLE%.%VARIABLEDEFINIDAENCONTRATO% // Obtengo la variable externa que se definió en el objeto de contrato, para poder visualizarla luego del dato debo definirle su visibilidad
+ 
+await %VARIABLE%.%METODOEXTERNO%(%PARAMETROSARECIBIR%); // Si el método está público, puedo usarlo desde consola
+
+# Buscar y editar datos en una red blockchain con Solidity
+function toggleDone(uint _id) public{
+    Task memory _task = tasks[_id]; // Le digo que es una variable que solo se usará en esta función y que se almacenará en memoria. También debemos indicarle su tipo de dato.
+    _task.done = !_task.done // Le digo que el nuevo valor de la propiedad done de la variable task, sera su contrario.
+    tasks[_id] = _task; // Igualo la variable global en el indice correcto a la variable local
+}
+
+# Constructor
+Permite ejecutar una porción de código al hacer deploy del contrato.
+constructor () {
+   createTask("Mi primer Tarea de Ejemplo", "Tengo que hacer algo"); // Aprovecho para crear una tarea de ejemplo, como un seeder
+}
+
+# Tests
+Sirven para poder probar nuestros contratos inteligentes sin la necesidad de estar gastando gas.
+Dentro de /test/ creamos un archivo .js llamado igual que el contrato
+
+Lo primero que debo hacer es llamar al contrato:
+const TaskContract = artifacts.require("TaskContract");
+
+contract("TaskContract", () => {
+    before(async () => {
+       this.tasksContract = await TaskContract.deployed(); // Lo guardo en una varialbe para poder utilizarlo en otro lado
+    }); // Ejecuta este código antes de cualquier testeo
+
+    it('migrate deployed successfully', async () => { // Si se migró correctamente
+        const address = this.tasksContract.address; // Llamo a la dirección del contrato
+        // Para probar un valor no es igual a assert.
+        assert.notEqual(address, null); // Variable, valor que no quiero
+        assert.notEqual(adress, undefined);
+        assert.notEqual(adress, 0x0);
+        assert.notEqual(adress, "");
+    });
+
+   it('get Tasks List', async () => { // Si la lista de tareas está lista
+       const tasksCounter = await this.tasksContract.taskCounter();
+       const task = await this.tasksContract.tasks(taskCounter) // Traigo la última tarea
+       assert.equal(task.id.ToNumber(), taskCounter); // Compruebo que el ID de la tarea sea un numero menor al contador de ayuda.
+   });
+}); // Defino el testeo
+
+Para ejecutar un test utilizo:
+truffle test
+
+DOC: https://www.trufflesuite.com/docs/truffle/testing/writing-tests-in-solidity
+
+# INTERACTURAR CON EL FRONTEND
+La interfaz será con HTML, CSS y JS pero si necesitan un intermediario que comunique ambas partes (Front y Blockchain). En el front, vamos a estar usando las mismas funciones que creamos en los contratos
+Podemos crear una carpeta /client/ en el index:
+style.css
+index.html
+app.js
+ui.js
+
+En este caso vamos a utilizar lite-server para emular el servidor sin usar node
+npm i lite-server
+npm init --yes
+
+https://prnt.sc/1qh34db
+  "scripts": {
+    "dev": "lite-server"
+  },
+
+https://prnt.sc/1qh34z7
+{
+    "server": {
+        "baseDir": [
+            "./client"
+        ],
+        "routes": {
+            "/libs" : "./node_modules" // Le asigno una ruta a los modulos de node para poder utilizarlos
+        }
+    },
+    "port": "3000"
+}
+
+# Configuramos Metamask para utilizarlo en la APP
+Click en la extensión -> Settings -> Redes y editamos Localhost con los datos que nos da Ganache
+Voy a añadir cuenta y le doy la llave privada que me da Ganache
+
+La extensión Metamask proporciona una variable al navegador llamada "ethereum", está me permite jugar con la billetera instalada.
+Como saber si tiene metamask instalado ? 
+if(window.ethereum){
+    console.log('Ethereum está instalado);
+}
+
+Si existe debo guardar esa respuesta en una variable llamada:
+web3Provider
+
+Para solicitar la conexión de mi DAPP a Metamask utilizo:
+await window.ethereum.request({method: 'eth_requestAccounts'});
+
+# Traer datos y trabajarlos
+
+--Instalación--
+Debemos instalar la herramienta para poder manejarlo utilizando:
+npm i @truffle/contract
+
+Seguidamente importar el script en nuestro index:
+<script src="@truffle/contract/dist/truffle-contract.min.js"></script>
+--Instalación--
+
+--Traer la información y trabajarla--
+let contracts = {}; // Defino un objeto contratos
+
+Hago un fetch que apunte al build/contracts/%MICONTRATOATRABAJAR% y lo paso a JSON
+loadContracts: async () => {
+    const res = await fetch('TaskContract.json');
+    const tasksContractJSON = await res.json();
+    contracts.tasksContract = TruffleContract(taskContractJSON); // Paso la data a la lectora de Truffle
+    contracts.tasksContract.setProvider(web3Provider); // Le paso el web3Provider definido anteriormente
+    tasksContract = await contracts.taskContract.deployed(); // Traigo un elemento del Contrato
+}
+
+Una vez cargado todo eso, si quiero crear un nuevo contrato
+tasksContract.createTask(title, description) // Llamo al metodo del contrato
+Debo enviar un from si o si para completarla:
+    loadAccount: async () => {
+        const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+        account = accounts[0]; // Traigo la primer cuenta :)
+    },
+
+tasksContract.createTask(title, description, {from: account})
+
+Renderizo en pantalla
+    render: async () => {
+        document.querySelector('#wallet').innerText = App.account;
+    },
+
+    renderTask: async () => {
+        const counter = await App.tasksContract.taskCounter();
+        const counterNumber = counter.toNumber();
+        console.log(counterNumber);
+    },
+--Traer la información y trabajarla--
+
+RESTO DE CODIGO MÁS ESPECÍFICO Y OTROS EN EL PROYECTO
+
